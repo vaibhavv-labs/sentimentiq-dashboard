@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 .streamlit/secrets.toml
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.csv
 results/
+=======
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.csv
+results/
+>>>>>>> d68145623c123ccc1715dc3aaa5a5dfae054eb26
 final_model/
