@@ -78,7 +78,7 @@ vaibhav9700/sentimentiq-distilbert
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/vaibhav9700/sentimentiq-dashboard.git
+git clone https://github.com/vaibhavv-labs/sentimentiq-dashboard.git
 cd sentimentiq-dashboard
 ```
 
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 ### 3. Add API Key
 Create `.streamlit/secrets.toml`:
 ```toml
-YOUTUBE_API_KEY = "your_youtube_api_key_here"
+YOUTUBE_API_KEY = "AIzaSyCvuQijtSSyrL7JLyki8Qq475pp7301m1g"
 ```
 
 ### 4. Run the app
@@ -124,8 +124,8 @@ streamlit run app.py
 ## 🙋 Author
 
 **Vaibhav Bhoyate**
-- GitHub: [@vaibhav9700](https://github.com/vaibhav9700)
-- LinkedIn: [Vaibhav Bhoyate](https://linkedin.com/in/vaibhav-bhoyate)
+- GitHub: [@vaibhavv-labs](https://github.com/vaibhavv-labs)
+- LinkedIn: [Vaibhav Bhoyate](https://www.linkedin.com/in/vaibhav-bhoyate-6328802a9/)
 
 ---
 
