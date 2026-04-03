@@ -74,6 +74,18 @@ vaibhav9700/sentimentiq-distilbert
 
 ---
 
+## 📊 Screenshots
+
+### 🖥️ Main Dashboard
+![Dashboard](https://raw.githubusercontent.com/vaibhavv-labs/sentimentiq-dashboard/main/assets/dashboard.png)
+
+### 📊 Analytics View
+![Analytics](https://raw.githubusercontent.com/vaibhavv-labs/sentimentiq-dashboard/main/assets/analytics.png)
+
+### 📡 Live YouTube Data
+![Live Data](https://raw.githubusercontent.com/vaibhavv-labs/sentimentiq-dashboard/main/assets/live-data.png)
+
+
 ## ⚙️ Local Setup
 
 ### 1. Clone the repository
