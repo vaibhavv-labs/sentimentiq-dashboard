@@ -4,5 +4,3 @@ transformers
 pandas
 plotly
 google-api-python-client
-scikit-learn
-numpy
