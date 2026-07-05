@@ -218,6 +218,8 @@ model, tokenizer = load_model()
 #  HELPERS
 # ─────────────────────────────────────────────
 COLOR = {"green": "#05f0a0", "red": "#ff3f5b", "yellow": "#ffc542", "blue": "#3d9eff"}
+TEXT_COLUMN_ALIASES = ["text", "tweet", "tweet_text", "content", "body", "post", "message", "comment"]
+TEXT_COLUMN_ALIAS_LABEL = ", ".join(f"'{column}'" for column in TEXT_COLUMN_ALIASES)
 
 PBASE = dict(
     paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
@@ -237,6 +239,17 @@ def is_valid_text(text):
     if re.findall(r'[^aeiouAEIOU\s]{6,}', t):
         return False, "Gibberish detected!", "Please enter a meaningful English sentence."
     return True, "", ""
+
+def normalize_text_column(df):
+    lower_to_original = {str(column).lower().strip(): column for column in df.columns}
+    for column in TEXT_COLUMN_ALIASES:
+        original = lower_to_original.get(column)
+        if original is None:
+            continue
+        if original == "text":
+            return df
+        return df.rename(columns={original: "text"})
+    return None
 
 def predict(text):
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=128)
@@ -419,16 +432,16 @@ elif "Bulk" in mode:
     <div class='cbox'>
         <div style='font-family:Syne,sans-serif;font-size:1.05rem;font-weight:700;color:#e8edf5;margin-bottom:10px;'>Upload CSV File</div>
         <div style='font-size:0.82rem;color:#4a5e7a;margin-bottom:14px;'>
-            CSV must have a column named <code style='background:#111e35;padding:2px 7px;border-radius:4px;color:#05f0a0;font-family:DM Mono,monospace;'>text</code>
+            CSV must include a text column named <code style='background:#111e35;padding:2px 7px;border-radius:4px;color:#05f0a0;font-family:DM Mono,monospace;'>text</code>, <code style='background:#111e35;padding:2px 7px;border-radius:4px;color:#05f0a0;font-family:DM Mono,monospace;'>tweet</code>, <code style='background:#111e35;padding:2px 7px;border-radius:4px;color:#05f0a0;font-family:DM Mono,monospace;'>tweet_text</code>, or another supported social export alias.
         </div>
     """, unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"], label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
 
     if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-        if "text" not in df.columns:
-            st.error("❌  Your CSV must have a column named 'text'.")
+        df = normalize_text_column(pd.read_csv(uploaded_file))
+        if df is None:
+            st.error(f"❌  Your CSV must have one text column: {TEXT_COLUMN_ALIAS_LABEL}.")
         else:
             prog = st.progress(0, text="Running analysis…")
             total_rows = len(df)
