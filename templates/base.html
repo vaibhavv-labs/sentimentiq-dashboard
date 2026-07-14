@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}SentimentIQ SaaS{% endblock %}</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, system-ui, sans-serif;
+      background: #070b14;
+      color: #e8edf5;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #070b14; }
+    a { color: #5eead4; text-decoration: none; }
+    .site-shell { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 32px; background: rgba(6, 13, 27, 0.92); border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .brand { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.03em; }
+    .nav-links { display: flex; align-items: center; gap: 16px; }
+    .nav-links a { color: #a5b4fc; font-weight: 500; }
+    .content { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 32px 32px 40px; }
+    .footer { padding: 18px 32px; font-size: 0.92rem; color: #94a3b8; background: rgba(6, 13, 27, 0.92); border-top: 1px solid rgba(255,255,255,0.06); }
+    .panel { background: rgba(9, 17, 34, 0.92); border: 1px solid rgba(255,255,255,0.08); border-radius: 22px; padding: 28px; margin-bottom: 24px; }
+    .page-title { margin: 0 0 10px; font-size: clamp(2rem, 2.4vw, 2.6rem); line-height: 1.05; }
+    .subtitle { color: #94a3b8; margin: 0 0 18px; }
+    .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card { background: rgba(11, 21, 39, 0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 22px; }
+    .card-head { display: flex; gap: 12px; align-items: baseline; margin-bottom: 18px; }
+    .badge { display: inline-flex; padding: 6px 14px; background: rgba(94,234,212,0.12); color: #5eead4; border-radius: 999px; font-size: 0.82rem; }
+    .field { display: grid; gap: 8px; margin-bottom: 16px; }
+    label { font-size: 0.92rem; color: #cbd5e1; }
+    input, textarea { width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; background: #07101f; color: #e8edf5; padding: 14px 16px; font: inherit; }
+    textarea { min-height: 140px; resize: vertical; }
+    button { border: none; border-radius: 14px; padding: 14px 20px; background: linear-gradient(135deg, #22c55e, #14b8a6); color: #020617; font-weight: 700; cursor: pointer; }
+    .notice, .error { padding: 14px 16px; border-radius: 14px; margin-bottom: 18px; }
+    .notice { background: rgba(34,197,94,0.12); color: #d9f99d; }
+    .error { background: rgba(239,68,68,0.12); color: #fecaca; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    th { color: #94a3b8; font-size: 0.9rem; }
+    tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .metric-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .metric { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
+    .metric strong { display: block; font-size: 1.55rem; margin-bottom: 6px; }
+    .metric span { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="/">SentimentIQ SaaS</a>
+      <nav class="nav-links">
+        {% if user %}
+          <a href="/dashboard">Dashboard</a>
+          <a href="/logout">Logout</a>
+        {% else %}
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      SentimentIQ SaaS · Multi-tenant analytics with model API & tenant-level usage.
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Register · SentimentIQ SaaS{% endblock %}
+{% block content %}
+  <div class="panel" style="max-width: 620px; margin: auto;">
+    <h1 class="page-title">Create your tenant</h1>
+    <p class="subtitle">Register your team, then sign in to access analytics and the prediction API.</p>
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="post">
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" name="name" type="text" placeholder="Jane Doe" required />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@company.com" required />
+      </div>
+      <div class="field">
+        <label for="tenant_name">Tenant</label>
+        <input id="tenant_name" name="tenant_name" type="text" placeholder="Acme Analytics" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Create a strong password" required />
+      </div>
+      <button type="submit">Register tenant</button>
+    </form>
+    <p style="margin-top:18px; color:#94a3b8;">Already have an account? <a href="/login">Sign in</a>.</p>
+  </div>
+{% endblock %}
