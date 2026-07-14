@@ -203,12 +203,12 @@ section[data-testid="stSidebar"] {
 
 
 # ─────────────────────────────────────────────
-#  LOAD MODEL — vaibhav9700 (CORRECT USERNAME)
+#  LOAD MODEL — RoBERTa
 # ─────────────────────────────────────────────
 @st.cache_resource(show_spinner="Loading model into memory (first time only)...")
 def load_model():
-    mdl = AutoModelForSequenceClassification.from_pretrained("vaibhav9700/sentimentiq-distilbert")
-    tok = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+    mdl = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
+    tok = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
     return mdl, tok
 
 
@@ -244,9 +244,10 @@ def predict(text):
     probs = F.softmax(outputs.logits, dim=1)
     pred  = torch.argmax(probs).item()
     conf  = probs[0][pred].item() * 100
-    if conf < 65:
+    
+    if conf < 90 or pred == 1:
         return "Neutral",  conf, "😐", COLOR["yellow"], "rgba(255,197,66,0.10)", "rgba(255,197,66,0.28)"
-    elif pred == 1:
+    elif pred == 2:
         return "Positive", conf, "😊", COLOR["green"],  "rgba(5,240,160,0.08)",  "rgba(5,240,160,0.28)"
     else:
         return "Negative", conf, "😡", COLOR["red"],    "rgba(255,63,91,0.08)",  "rgba(255,63,91,0.28)"
