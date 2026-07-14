@@ -144,8 +144,8 @@ def is_valid_text(text: str):
 
 @lru_cache()
 def load_model():
-    model = AutoModelForSequenceClassification.from_pretrained("vaibhav9700/sentimentiq-distilbert")
-    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+    model = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
+    tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
     return model, tokenizer
 
 
@@ -157,11 +157,15 @@ def predict(text: str):
     probs = F.softmax(outputs.logits, dim=1)
     pred = torch.argmax(probs).item()
     conf = probs[0][pred].item() * 100
-    if conf < 65:
+    
+    # cardiffnlp/twitter-roberta-base-sentiment mapping:
+    # 0 -> Negative, 1 -> Neutral, 2 -> Positive
+    if conf < 90 or pred == 1:
         return "Neutral", conf, "😐"
-    elif pred == 1:
+    elif pred == 2:
         return "Positive", conf, "😊"
-    return "Negative", conf, "😡"
+    else:
+        return "Negative", conf, "😡"
 
 
 def get_dashboard_context(user: User, db: Session):
@@ -214,14 +218,14 @@ def home() -> RedirectResponse:
 
 @app.get("/login", response_class=HTMLResponse)
 def get_login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "error": None, "message": request.query_params.get("message", "")})
+    return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": None, "message": request.query_params.get("message", "")})
 
 
 @app.post("/login", response_class=HTMLResponse)
 def post_login(request: Request, email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email.lower().strip()).first()
     if not user or not verify_password(password, user.hashed_password):
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials.", "message": ""})
+        return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": "Invalid credentials.", "message": ""})
 
     token = create_access_token({"sub": str(user.id), "tenant_id": str(user.tenant_id)})
     request.session["token"] = token
@@ -230,7 +234,7 @@ def post_login(request: Request, email: str = Form(...), password: str = Form(..
 
 @app.get("/register", response_class=HTMLResponse)
 def get_register(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request=request, name="register.html", context={"request": request, "error": None})
 
 
 @app.post("/register", response_class=HTMLResponse)
@@ -245,7 +249,7 @@ def post_register(
     email_value = email.lower().strip()
     tenant_slug = slugify(tenant_name)
     if db.query(User).filter(User.email == email_value).first():
-        return templates.TemplateResponse("register.html", {"request": request, "error": "This email is already registered."})
+        return templates.TemplateResponse(request=request, name="register.html", context={"request": request, "error": "This email is already registered."})
 
     tenant = db.query(Tenant).filter(Tenant.slug == tenant_slug).first()
     if not tenant:
@@ -275,8 +279,8 @@ def get_dashboard(request: Request, db: Session = Depends(get_db)):
 
     context = get_dashboard_context(user, db)
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
+        request=request, name="dashboard.html",
+        context={
             "request": request,
             "user": user,
             "tenant": context["tenant"],
@@ -318,8 +322,8 @@ def post_dashboard(request: Request, text: str = Form(...), db: Session = Depend
 
     context = get_dashboard_context(user, db)
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
+        request=request, name="dashboard.html",
+        context={
             "request": request,
             "user": user,
             "tenant": context["tenant"],
