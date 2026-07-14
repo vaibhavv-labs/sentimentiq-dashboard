@@ -14,6 +14,8 @@
 <br/>
 
 > 🧠 **A fully-featured SaaS platform for analyzing the sentiment of any text. Powered by a RoBERTa transformer model, FastAPI, and JWT authentication.**
+> 
+> 🌐 **[Live Demo: sentimentiq-dashboard.onrender.com](https://sentimentiq-dashboard.onrender.com)**
 
 <br/>
 
