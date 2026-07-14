@@ -205,13 +205,11 @@ section[data-testid="stSidebar"] {
 # ─────────────────────────────────────────────
 #  LOAD MODEL — vaibhav9700 (CORRECT USERNAME)
 # ─────────────────────────────────────────────
-@st.cache_resource
+@st.cache_resource(show_spinner="Loading model into memory (first time only)...")
 def load_model():
     mdl = AutoModelForSequenceClassification.from_pretrained("vaibhav9700/sentimentiq-distilbert")
     tok = AutoTokenizer.from_pretrained("distilbert-base-uncased")
     return mdl, tok
-
-model, tokenizer = load_model()
 
 
 # ─────────────────────────────────────────────
@@ -239,6 +237,7 @@ def is_valid_text(text):
     return True, "", ""
 
 def predict(text):
+    model, tokenizer = load_model()
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=128)
     with torch.no_grad():
         outputs = model(**inputs)

@@ -1,26 +1,23 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Space+Mono&size=30&pause=1000&color=FFD21E&center=true&vCenter=true&width=700&lines=SentimentIQ+%F0%9F%A7%A0;NLP-Powered+Sentiment+Analysis;Fine-tuned+DistilBERT+%C2%B7+82%25+Accuracy;Analyze+Text+%7C+CSV+%7C+YouTube+Live" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Space+Mono&size=30&pause=1000&color=FFD21E&center=true&vCenter=true&width=700&lines=SentimentIQ+%F0%9F%A7%A0;SaaS+Sentiment+Analysis+Platform;RoBERTa+Model+%C2%B7+Multi-Tenant;FastAPI+%C2%B7+Secure+Auth" alt="Typing SVG" />
 
 <br/>
 
 ![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![HuggingFace](https://img.shields.io/badge/HuggingFace-DistilBERT-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)
+![HuggingFace](https://img.shields.io/badge/HuggingFace-RoBERTa-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-00FF88?style=for-the-badge)
 
 <br/>
 
-> 🧠 **Analyze the sentiment of any text, bulk CSV data, or live YouTube comments — powered by a fine-tuned DistilBERT transformer model.**
+> 🧠 **A fully-featured SaaS platform for analyzing the sentiment of any text. Powered by a RoBERTa transformer model, FastAPI, and JWT authentication.**
 
 <br/>
 
-### 🔗 [Try SentimentIQ Live →](https://sentimentiq-dashboard-njiprgwlcchwkuemvrqwn4.streamlit.app/)
-
-<br/>
-
-![Header](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6&height=120&section=header&text=SentimentIQ&fontSize=32&fontColor=ffffff&animation=fadeIn&desc=NLP-Based+Social+Media+Sentiment+Analysis&descSize=15&descAlignY=78)
+![Header](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6&height=120&section=header&text=SentimentIQ&fontSize=32&fontColor=ffffff&animation=fadeIn&desc=NLP-Based+SaaS+Sentiment+Platform&descSize=15&descAlignY=78)
 
 </div>
 
@@ -30,13 +27,13 @@
 
 | Feature | Description |
 |---|---|
-| 📝 **Single Text Analyzer** | Type any sentence and get instant sentiment with confidence score |
-| 📂 **Bulk CSV Analysis** | Upload a CSV file and analyze thousands of rows at once |
-| 📡 **Live YouTube Comments** | Paste any YouTube URL and analyze real comments live |
+| 🏢 **Multi-Tenant Architecture** | Create isolated workspaces for different organizations |
+| 🔐 **Authentication** | Secure Login & Register flows with JWT & Bcrypt |
+| ⚡ **FastAPI Backend** | High performance REST API with Bearer token auth |
+| 📝 **Text Analyzer** | Type any sentence and get instant sentiment with confidence score |
 | 😊 **3-Class Output** | Positive, Neutral, Negative with emoji indicators |
-| 🚫 **Gibberish Detection** | Rejects random/invalid inputs intelligently |
-| 📊 **Interactive Charts** | Pie chart, bar chart, confidence distribution |
-| ⬇️ **Download Results** | Export analyzed data as CSV |
+| 🎛️ **Confidence Thresholding** | Dynamic fallback to Neutral if model confidence is < 90% |
+| 📂 **CSV Aliasing** | Robust CSV import with flexible column aliases |
 
 ---
 
@@ -44,54 +41,42 @@
 
 | Property | Details |
 |---|---|
-| Base Model | `distilbert-base-uncased` |
+| Base Model | `cardiffnlp/twitter-roberta-base-sentiment` |
 | Task | Sentiment Classification (3-class) |
-| Dataset | Twitter Sentiment 140 |
-| Training Samples | 15,000 tweets |
-| Validation Accuracy | **82.0%** |
-| F1 Score | **0.82** |
+| Architecture | RoBERTa (Robustly Optimized BERT Pretraining Approach) |
 | Framework | HuggingFace Transformers + PyTorch |
-| Hosted On | `vaibhav9700/sentimentiq-distilbert` |
+| Logic | Returns Neutral if confidence is below 90% |
 
 ---
 
 ## 🔍 How It Works
 
-```
-  📥 Input (Text / CSV / YouTube URL)
+```text
+  📥 User Input via Dashboard UI
            │
            ▼
-  🧹 Clean & Validate
-  (lowercasing, URL removal, gibberish check)
+  🔐 Auth Middleware (JWT Token Validation)
            │
            ▼
-  🔤 DistilBERT Tokenizer
-  (text → token IDs)
+  🔤 RoBERTa Tokenizer
            │
            ▼
-  🧠 Fine-tuned DistilBERT Model
-  (token IDs → sentiment probabilities)
+  🧠 RoBERTa Model Prediction
            │
-           ├── Confidence ≥ 65% ──▶ 😊 Positive / 😤 Negative
+           ├── Confidence ≥ 90% ──▶ 😊 Positive / 😤 Negative
            │
-           └── Confidence < 65% ──▶ 😐 Neutral
-                                          │
-                                          ▼
-                              📊 Plotly Charts + CSV Export
+           └── Confidence < 90% ──▶ 😐 Neutral
 ```
 
 ---
 
-## 📊 Screenshots
+## 📊 Screenshots (Placeholder)
 
-### 🖥️ Main Dashboard
-![Dashboard](https://raw.githubusercontent.com/vaibhavv-labs/sentimentiq-dashboard/main/assets/dashboard.png)
+### 🖥️ Login / Register UI
+![Login Register Placeholder](https://via.placeholder.com/800x400?text=Login+/+Register+UI+Screenshot+Here)
 
-### 📊 Analytics View
-![Analytics](https://raw.githubusercontent.com/vaibhavv-labs/sentimentiq-dashboard/main/assets/analytics.png)
-
-### 📡 Live YouTube Data
-![Live Data](https://raw.githubusercontent.com/vaibhavv-labs/sentimentiq-dashboard/main/assets/live-data.png)
+### 🏢 SaaS Dashboard
+![Dashboard Placeholder](https://via.placeholder.com/800x400?text=SaaS+Dashboard+UI+Screenshot+Here)
 
 ---
 
@@ -100,40 +85,30 @@
 | Technology | Purpose |
 |---|---|
 | Python 3.10 | Core language |
-| HuggingFace Transformers | DistilBERT fine-tuning & inference |
+| FastAPI & Uvicorn | High-performance REST API |
+| SQLAlchemy & SQLite | Database & ORM |
+| JWT & Passlib | Secure authentication |
+| Jinja2 | HTML Template rendering |
+| HuggingFace Transformers | RoBERTa inference |
 | PyTorch | Deep learning backend |
-| Streamlit | Web dashboard UI |
-| Plotly | Interactive charts |
-| YouTube Data API v3 | Live comment fetching |
-| Pandas | Data processing |
-| HuggingFace Hub | Model hosting |
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 sentimentiq-dashboard/
 │
-├── app.py                  # 🖥️  Main Streamlit dashboard
+├── backend.py              # ⚡  Main FastAPI application & logic
+├── saas.db                 # 🗄️  SQLite database (Users & Tenants)
 ├── requirements.txt        # 📦  Python dependencies
-├── .streamlit/
-│   └── secrets.toml        # 🔑  API keys (not in GitHub)
+├── templates/
+│   ├── base.html           # 🏗️  Base HTML layout
+│   ├── login.html          # 🔐  Login page
+│   ├── register.html       # 📝  Registration page
+│   └── dashboard.html      # 📊  SaaS Dashboard page
 └── README.md               # 📄  Project documentation
-
-🤗 Model on HuggingFace Hub:
-   vaibhav9700/sentimentiq-distilbert
 ```
-
----
-
-## 📈 Model Training Details
-
-- **Dataset:** Twitter Sentiment 140 (1.6M tweets → sampled 15,000)
-- **Preprocessing:** Lowercasing, URL removal, @mention removal, hashtag cleaning
-- **Fine-tuning:** 3 epochs · LR: 2e-5 · Batch size: 16
-- **Evaluation:** Accuracy **82.0%** · F1 Score **0.82**
-- **Platform:** Google Colab (T4 GPU) · ~20 minutes training time
 
 ---
 
@@ -150,47 +125,27 @@ cd sentimentiq-dashboard
 pip install -r requirements.txt
 ```
 
-### 3. Add your YouTube API Key
-```toml
-# .streamlit/secrets.toml
-YOUTUBE_API_KEY = "your_api_key_here"
-```
-
-### 4. Run the app
+### 3. Run the FastAPI Server
 ```bash
-streamlit run app.py
+python -m uvicorn backend:app --port 8000 --reload
 ```
 
----
-
-## 🗺️ Roadmap
-
-- [ ] 🐦 Twitter/X live feed integration
-- [ ] 🌍 Multi-language sentiment support
-- [ ] 📅 Sentiment trend over time graphs
-- [ ] 🔔 Alert on negative sentiment spike
-- [ ] 🧪 A/B comparison between models
+### 4. Open the App
+Visit [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser to access the Login/Register flow and the Sentiment Analysis Dashboard.
 
 ---
 
-## 🙋 Author
+## 🤝 Contributors
 
-**Vaibhav Bhoyate**
-
+**Vaibhav Bhoyate** (Creator/Author)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/vaibhav-bhoyate-6328802a9/)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/vaibhavv-labs)
-[![Portfolio](https://img.shields.io/badge/Portfolio-00FF88?style=for-the-badge&logo=vercel&logoColor=black)](https://portfolio-vaibhav13.vercel.app/)
+
+**Special Thanks to:**
+- **kriptoburak** for improving the CSV column alias robustness and adding the MIT License.
 
 ---
 
 ## 📄 License
 
 This project is licensed under the **MIT License.**
-
-<div align="center">
-
-⭐ **Star this repo if it helped you!** ⭐
-
-![Footer](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6&height=100&section=footer)
-
-</div>

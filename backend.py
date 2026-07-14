@@ -33,6 +33,13 @@ Base = declarative_base()
 app = FastAPI(title="SentimentIQ SaaS Backend")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie="sentimentiq_session", max_age=86400)
 
+@app.on_event("startup")
+def startup_event():
+    # Pre-load model into memory during server startup so the first request is instant
+    print("Pre-loading RoBERTa model into memory...")
+    load_model()
+    print("Model loaded successfully!")
+
 templates = Jinja2Templates(directory="templates")
 
 
