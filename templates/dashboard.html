@@ -1,195 +1,176 @@
 {% extends "base.html" %}
 {% block title %}Dashboard · SentimentIQ SaaS{% endblock %}
+
+{% block sidebar %}
+<aside class="sidebar">
+  <div class="sidebar-title">🧠 SentimentIQ</div>
+  <div class="sidebar-subtitle">Powered by DistilBERT</div>
+  
+  <div style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Select Mode</div>
+  <div class="sidebar-nav">
+    <div id="nav-text" class="sidebar-link {% if active_tab == 'text' or not active_tab %}active{% endif %}" onclick="switchMode('text')">📝 Single Text Analyzer</div>
+    <div id="nav-csv" class="sidebar-link {% if active_tab == 'csv' %}active{% endif %}" onclick="switchMode('csv')">📂 Bulk CSV Analysis</div>
+    <div id="nav-youtube" class="sidebar-link {% if active_tab == 'youtube' %}active{% endif %}" onclick="switchMode('youtube')">📡 Live Data</div>
+  </div>
+
+  <div class="divider"></div>
+  <div style="font-size:0.68rem; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; color:#94a3b8; margin-bottom:12px;">Model Info</div>
+  <div class="info-card">
+      <div class="info-row"><div class="info-key">Architecture</div><div class="info-val">DistilBERT-base-uncased</div></div>
+      <div class="info-row"><div class="info-key">Dataset</div><div class="info-val">Twitter Sentiment 140</div></div>
+      <div class="info-row"><div class="info-key">Training Samples</div><div class="info-val">15,000 tweets</div></div>
+      <div class="info-row"><div class="info-key">Validation Accuracy</div><div class="info-val green">82.0%</div></div>
+      <div class="info-row"><div class="info-key">Labels</div><div class="info-val">Positive · Neutral · Negative</div></div>
+  </div>
+</aside>
+{% endblock %}
+
 {% block content %}
-  <div class="panel">
-    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px;">
+<div class="hero">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
       <div>
-        <h1 class="page-title">Welcome back, {{ user.name }}.</h1>
-        <p class="subtitle">Tenant: <strong>{{ tenant.name }}</strong> · Total predictions: <strong>{{ metrics.total }}</strong></p>
+          <div class="hero-title">Social Media <span>Sentiment</span> Dashboard</div>
+          <div style="color:var(--muted); font-size:0.9rem;">Real-time sentiment analysis · DistilBERT transformer · Twitter dataset</div>
       </div>
-      <div class="badge">Multi-tenant SaaS</div>
-    </div>
+      <div class="pill"><div class="pulse"></div>LIVE INFERENCE</div>
   </div>
+</div>
 
-  <div class="metric-grid">
-    <div class="metric"><strong>{{ metrics.total }}</strong><span>Total predictions</span></div>
-    <div class="metric"><strong>{{ metrics.positive }}</strong><span>Positive predictions</span></div>
-    <div class="metric"><strong>{{ metrics.neutral }}</strong><span>Neutral predictions</span></div>
-    <div class="metric"><strong>{{ metrics.negative }}</strong><span>Negative predictions</span></div>
-  </div>
-
-  <div class="tab-list">
-    <button class="tab-btn {% if active_tab == 'text' or not active_tab %}active{% endif %}" onclick="openTab(event, 'tab-text')">Single Text</button>
-    <button class="tab-btn {% if active_tab == 'csv' %}active{% endif %}" onclick="openTab(event, 'tab-csv')">Bulk CSV</button>
-    <button class="tab-btn {% if active_tab == 'youtube' %}active{% endif %}" onclick="openTab(event, 'tab-youtube')">YouTube Live</button>
-  </div>
-
-  <div id="tab-text" class="tab-content {% if active_tab == 'text' or not active_tab %}active{% endif %}">
-    <div class="grid">
-      <div class="card">
-        <div class="card-head"><h2>Analyze text</h2></div>
-        <form method="post" action="/dashboard">
-          <div class="field">
-            <label for="text">Enter text to predict sentiment</label>
-            <textarea id="text" name="text" placeholder="I love this product!" required></textarea>
+<div id="tab-text" class="tab-content {% if active_tab == 'text' or not active_tab %}active{% endif %}">
+  <div class="grid-2">
+    <div class="card">
+      <h2 style="margin-top:0;">Analyze a Text</h2>
+      <form method="post" action="/dashboard">
+        <textarea name="text" placeholder='"This product completely exceeded my expectations!"' required style="margin-bottom:16px;"></textarea>
+        <button type="submit" style="width:100%;">⚡ Run Sentiment Analysis</button>
+      </form>
+      
+      {% if analysis and active_tab == 'text' %}
+        {% if analysis.error %}
+          <div style="margin-top:20px; padding:16px; background:rgba(255,63,91,0.1); border:1px solid rgba(255,63,91,0.3); border-radius:12px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">🤷</div>
+            <div style="color:#ff7a8a; font-weight:700;">{{ analysis.error }}</div>
+            <div style="font-size:0.85rem; color:var(--muted);">{{ analysis.hint }}</div>
           </div>
-          <button type="submit">Run sentiment analysis</button>
-        </form>
-        {% if analysis and active_tab == 'text' %}
-          {% if analysis.error %}
-            <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
-          {% else %}
-            <div class="notice" style="margin-top:18px;">
-              {{ analysis.emoji }} <strong>{{ analysis.sentiment }}</strong> · Confidence {{ analysis.confidence }}
-              <div>{{ analysis.message }}</div>
-            </div>
-          {% endif %}
-        {% endif %}
-      </div>
-
-      <div class="card">
-        <div class="card-head"><h2>API access</h2></div>
-        <p>Use the REST API with a bearer token after signing in.</p>
-        <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"you@company.com","password":"yourpassword"}'</pre>
-        <p>Then call:</p>
-        <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/predict \
-  -H "Authorization: Bearer &lt;token&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{"text":"I had a great day"}'</pre>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-csv" class="tab-content {% if active_tab == 'csv' %}active{% endif %}">
-    <div class="card" style="margin-bottom: 24px;">
-      <div class="card-head"><h2>Bulk CSV Analysis</h2></div>
-      <form method="post" action="/dashboard/csv" enctype="multipart/form-data" style="display:flex; align-items:center; gap: 16px; flex-wrap: wrap;">
-        <input type="file" name="file" accept=".csv" required style="max-width: 400px; padding: 10px;" />
-        <button type="submit" style="padding: 12px 24px;">Upload & Analyze</button>
-      </form>
-      {% if analysis and active_tab == 'csv' %}
-        {% if analysis.error %}
-           <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
         {% else %}
-           <div class="grid" style="margin-top: 24px;">
-             <div class="card">
-               <div class="card-head"><h3>Sentiment Split</h3></div>
-               {{ analysis.pie_chart | safe }}
-             </div>
-             <div class="card">
-               <div class="card-head"><h3>Count by Sentiment</h3></div>
-               {{ analysis.bar_chart | safe }}
-             </div>
-           </div>
-           
-           <h3 style="margin-top: 32px;">Top Results</h3>
-           <div style="overflow-x:auto;">
-           <table>
-             <thead><tr><th>Emoji</th><th>Text</th><th>Sentiment</th><th>Confidence</th></tr></thead>
-             <tbody>
-               {% for row in analysis.data %}
-                 <tr>
-                   <td style="font-size:1.5rem">{{ row.emoji }}</td>
-                   <td>{{ row.text[:100] }}{% if row.text|length > 100 %}...{% endif %}</td>
-                   <td>{{ row.sentiment }}</td>
-                   <td>{{ row.confidence }}%</td>
-                 </tr>
-               {% endfor %}
-             </tbody>
-           </table>
-           </div>
+          {% set bg = "rgba(5,240,160,0.08)" if analysis.sentiment == 'Positive' else "rgba(255,63,91,0.08)" if analysis.sentiment == 'Negative' else "rgba(255,197,66,0.10)" %}
+          {% set border = "rgba(5,240,160,0.28)" if analysis.sentiment == 'Positive' else "rgba(255,63,91,0.28)" if analysis.sentiment == 'Negative' else "rgba(255,197,66,0.28)" %}
+          {% set color = "#05f0a0" if analysis.sentiment == 'Positive' else "#ff3f5b" if analysis.sentiment == 'Negative' else "#ffc542" %}
+          
+          <div class="res-wrap" style="background: {{ bg }}; border-color: {{ border }};">
+              <div style="font-size:4rem; line-height:1;">{{ analysis.emoji }}</div>
+              <div style="font-family:'Syne'; font-size:1.7rem; font-weight:700; color:{{ color }}; margin:8px 0;">{{ analysis.sentiment }}</div>
+              <div style="font-size:0.85rem; color:var(--muted); font-family:'DM Mono'; margin-bottom:14px;">Confidence: {{ analysis.confidence }}%</div>
+              <div style="height:5px; background:rgba(255,255,255,0.07); border-radius:5px; max-width:220px; margin:0 auto;">
+                  <div style="height:5px; border-radius:5px; width:{{ analysis.confidence }}%; background:{{ color }};"></div>
+              </div>
+          </div>
         {% endif %}
       {% endif %}
     </div>
-  </div>
 
-  <div id="tab-youtube" class="tab-content {% if active_tab == 'youtube' %}active{% endif %}">
-    <div class="card" style="margin-bottom: 24px;">
-      <div class="card-head"><h2>YouTube Live Comments</h2></div>
-      <form method="post" action="/dashboard/youtube" style="display:flex; align-items:center; gap: 16px; flex-wrap: wrap;">
-        <input type="text" name="yt_url" placeholder="https://www.youtube.com/watch?v=..." required style="flex:1; min-width: 300px;" />
-        <select name="comment_limit" style="padding: 14px 16px; border-radius: 14px; background: #07101f; color: #e8edf5; border: 1px solid rgba(255,255,255,0.1);">
-           <option value="20">20 Comments</option>
-           <option value="50" selected>50 Comments</option>
-           <option value="100">100 Comments</option>
-        </select>
-        <button type="submit" style="padding: 12px 24px;">Fetch & Analyze</button>
-      </form>
-      {% if analysis and active_tab == 'youtube' %}
-        {% if analysis.error %}
-           <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
-        {% else %}
-           <div class="grid" style="margin-top: 24px;">
-             <div class="card">
-               <div class="card-head"><h3>Sentiment Split</h3></div>
-               {{ analysis.pie_chart | safe }}
-             </div>
-             <div class="card">
-               <div class="card-head"><h3>Count by Sentiment</h3></div>
-               {{ analysis.bar_chart | safe }}
-             </div>
-           </div>
-           
-           <h3 style="margin-top: 32px;">Top Comments (By Likes)</h3>
-           <div style="overflow-x:auto;">
-           <table>
-             <thead><tr><th>Emoji</th><th>Comment</th><th>Sentiment</th><th>Confidence</th><th>Likes</th></tr></thead>
-             <tbody>
-               {% for row in analysis.data %}
-                 <tr>
-                   <td style="font-size:1.5rem">{{ row.emoji }}</td>
-                   <td>{{ row.text[:100] }}{% if row.text|length > 100 %}...{% endif %}</td>
-                   <td>{{ row.sentiment }}</td>
-                   <td>{{ row.confidence }}%</td>
-                   <td>👍 {{ row.likes }}</td>
-                 </tr>
-               {% endfor %}
-             </tbody>
-           </table>
-           </div>
-        {% endif %}
-      {% endif %}
+    <div class="card">
+      <h3 style="margin-top:0; font-size:1rem; color:var(--text);">Try These Examples</h3>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="padding:10px 12px; background:rgba(255,255,255,0.03); border-radius:10px; font-size:0.85rem; display:flex; gap:10px;"><div style="width:8px;height:8px;border-radius:50%;background:#05f0a0;margin-top:5px;flex-shrink:0;"></div>"This product completely exceeded my expectations!"</div>
+        <div style="padding:10px 12px; background:rgba(255,255,255,0.03); border-radius:10px; font-size:0.85rem; display:flex; gap:10px;"><div style="width:8px;height:8px;border-radius:50%;background:#05f0a0;margin-top:5px;flex-shrink:0;"></div>"Amazing customer service, I highly recommend it!"</div>
+        <div style="padding:10px 12px; background:rgba(255,255,255,0.03); border-radius:10px; font-size:0.85rem; display:flex; gap:10px;"><div style="width:8px;height:8px;border-radius:50%;background:#ffc542;margin-top:5px;flex-shrink:0;"></div>"Just received my order, will update later."</div>
+        <div style="padding:10px 12px; background:rgba(255,255,255,0.03); border-radius:10px; font-size:0.85rem; display:flex; gap:10px;"><div style="width:8px;height:8px;border-radius:50%;background:#ff3f5b;margin-top:5px;flex-shrink:0;"></div>"Terrible experience, complete waste of money!"</div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    function openTab(evt, tabName) {
-      const tabContents = document.getElementsByClassName("tab-content");
-      for (let i = 0; i < tabContents.length; i++) {
-        tabContents[i].classList.remove("active");
-      }
-      const tabBtns = document.getElementsByClassName("tab-btn");
-      for (let i = 0; i < tabBtns.length; i++) {
-        tabBtns[i].classList.remove("active");
-      }
-      document.getElementById(tabName).classList.add("active");
-      evt.currentTarget.classList.add("active");
-    }
-  </script>
-
-  <div class="panel">
-    <h2>Recent tenant predictions</h2>
-    {% if recent %}
-      <table>
-        <thead>
-          <tr><th>When</th><th>Text</th><th>Sentiment</th><th>Confidence</th><th>User</th></tr>
-        </thead>
-        <tbody>
-          {% for item in recent %}
-            <tr>
-              <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-              <td>{{ item.text }}</td>
-              <td>{{ item.sentiment }}</td>
-              <td>{{ item.confidence }}%</td>
-              <td>{{ item.user.email }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p style="color:#94a3b8;">No predictions yet. Enter a sentence above to save your first record.</p>
+<div id="tab-csv" class="tab-content {% if active_tab == 'csv' %}active{% endif %}">
+  <div class="card">
+    <h2 style="margin-top:0; margin-bottom:8px;">Upload CSV File</h2>
+    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">
+      CSV must include a text column named <code style="background:#111e35; color:#05f0a0; padding:2px 6px; border-radius:4px;">text</code>, <code style="background:#111e35; color:#05f0a0; padding:2px 6px; border-radius:4px;">tweet</code>, or <code style="background:#111e35; color:#05f0a0; padding:2px 6px; border-radius:4px;">content</code>.
+    </p>
+    <form method="post" action="/dashboard/csv" enctype="multipart/form-data" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <input type="file" name="file" accept=".csv" required style="max-width:350px; background:transparent; border: 1.5px dashed rgba(255,255,255,0.15);" />
+      <button type="submit">Upload & Analyze</button>
+    </form>
+    
+    {% if analysis and active_tab == 'csv' %}
+      {% if analysis.error %}
+        <div style="margin-top:20px; color:#ff7a8a;"><strong>Error:</strong> {{ analysis.error }}</div>
+      {% else %}
+        <div class="grid-2" style="margin-top:24px;">
+          <div class="card" style="margin-bottom:0;"><h3 style="margin-top:0;font-size:0.9rem;text-transform:uppercase;color:var(--muted);">Sentiment Split</h3>{{ analysis.pie_chart | safe }}</div>
+          <div class="card" style="margin-bottom:0;"><h3 style="margin-top:0;font-size:0.9rem;text-transform:uppercase;color:var(--muted);">Count by Sentiment</h3>{{ analysis.bar_chart | safe }}</div>
+        </div>
+        
+        <div class="card" style="margin-top:24px;">
+          <h3 style="margin-top:0;">Analyzed Data · Top Results</h3>
+          <div style="overflow-x:auto;">
+            <table id="csv-results-table">
+              <thead><tr><th></th><th>Text</th><th>Sentiment</th><th>Confidence (%)</th></tr></thead>
+              <tbody>
+                {% for row in analysis.data %}
+                  <tr>
+                    <td style="font-size:1.3rem;">{{ row.emoji }}</td>
+                    <td>{{ row.text[:120] }}{% if row.text|length > 120 %}...{% endif %}</td>
+                    <td>{{ row.sentiment }}</td>
+                    <td style="font-family:'DM Mono';">{{ row.confidence }}%</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button class="btn-secondary" style="margin-top:20px;" onclick="downloadCSV('csv-results-table', 'sentiment_results.csv')">⬇️ Download Results as CSV</button>
+        </div>
+      {% endif %}
     {% endif %}
   </div>
+</div>
+
+<div id="tab-youtube" class="tab-content {% if active_tab == 'youtube' %}active{% endif %}">
+  <div class="card">
+    <h2 style="margin-top:0; margin-bottom:8px;">📡 Live YouTube Comment Analysis</h2>
+    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Fetches real comments and analyzes sentiment instantly.</p>
+    
+    <form method="post" action="/dashboard/youtube" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <input type="text" name="yt_url" placeholder="https://www.youtube.com/watch?v=xxxxxxx" required style="flex:1; min-width: 250px;" />
+      <select name="comment_limit" style="width:160px;">
+        <option value="20">20 Comments</option>
+        <option value="50" selected>50 Comments</option>
+        <option value="100">100 Comments</option>
+      </select>
+      <button type="submit">▶️ Fetch Comments</button>
+    </form>
+
+    {% if analysis and active_tab == 'youtube' %}
+      {% if analysis.error %}
+        <div style="margin-top:20px; color:#ff7a8a;"><strong>Error:</strong> {{ analysis.error }}<br><small>{{ analysis.hint }}</small></div>
+      {% else %}
+        <div class="grid-2" style="margin-top:24px;">
+          <div class="card" style="margin-bottom:0;"><h3 style="margin-top:0;font-size:0.9rem;text-transform:uppercase;color:var(--muted);">Sentiment Split</h3>{{ analysis.pie_chart | safe }}</div>
+          <div class="card" style="margin-bottom:0;"><h3 style="margin-top:0;font-size:0.9rem;text-transform:uppercase;color:var(--muted);">Count by Sentiment</h3>{{ analysis.bar_chart | safe }}</div>
+        </div>
+        
+        <div class="card" style="margin-top:24px;">
+          <h3 style="margin-top:0;">Comments with Sentiment</h3>
+          <div style="overflow-x:auto;">
+            <table id="yt-results-table">
+              <thead><tr><th></th><th>Comment</th><th>Sentiment</th><th>Confidence (%)</th><th>👍 Likes</th></tr></thead>
+              <tbody>
+                {% for row in analysis.data %}
+                  <tr>
+                    <td style="font-size:1.3rem;">{{ row.emoji }}</td>
+                    <td>{{ row.text[:120] }}{% if row.text|length > 120 %}...{% endif %}</td>
+                    <td>{{ row.sentiment }}</td>
+                    <td style="font-family:'DM Mono';">{{ row.confidence }}%</td>
+                    <td>{{ row.likes }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button class="btn-secondary" style="margin-top:20px;" onclick="downloadCSV('yt-results-table', 'youtube_sentiment.csv')">⬇️ Download Results as CSV</button>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

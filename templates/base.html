@@ -5,61 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}SentimentIQ SaaS{% endblock %}</title>
   <style>
-    :root {
-      color-scheme: dark;
-      font-family: Inter, system-ui, sans-serif;
-      background: #070b14;
-      color: #e8edf5;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; background: #070b14; }
-    a { color: #5eead4; text-decoration: none; }
-    .site-shell { display: flex; flex-direction: column; min-height: 100vh; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 32px; background: rgba(6, 13, 27, 0.92); border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .brand { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.03em; }
-    .nav-links { display: flex; align-items: center; gap: 16px; }
-    .nav-links a { color: #a5b4fc; font-weight: 500; }
-    .content { flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; padding: 32px 32px 40px; }
-    .footer { padding: 18px 32px; font-size: 0.92rem; color: #94a3b8; background: rgba(6, 13, 27, 0.92); border-top: 1px solid rgba(255,255,255,0.06); }
-    .panel { background: rgba(9, 17, 34, 0.92); border: 1px solid rgba(255,255,255,0.08); border-radius: 22px; padding: 28px; margin-bottom: 24px; }
-    .page-title { margin: 0 0 10px; font-size: clamp(2rem, 2.4vw, 2.6rem); line-height: 1.05; }
-    .subtitle { color: #94a3b8; margin: 0 0 18px; }
-    .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-    .card { background: rgba(11, 21, 39, 0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 22px; }
-    .card-head { display: flex; gap: 12px; align-items: baseline; margin-bottom: 18px; }
-    .badge { display: inline-flex; padding: 6px 14px; background: rgba(94,234,212,0.12); color: #5eead4; border-radius: 999px; font-size: 0.82rem; }
-    .field { display: grid; gap: 8px; margin-bottom: 16px; }
-    label { font-size: 0.92rem; color: #cbd5e1; }
-    input, textarea { width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; background: #07101f; color: #e8edf5; padding: 14px 16px; font: inherit; }
-    textarea { min-height: 140px; resize: vertical; }
-    button { border: none; border-radius: 14px; padding: 14px 20px; background: linear-gradient(135deg, #22c55e, #14b8a6); color: #020617; font-weight: 700; cursor: pointer; }
-    .notice, .error { padding: 14px 16px; border-radius: 14px; margin-bottom: 18px; }
-    .notice { background: rgba(34,197,94,0.12); color: #d9f99d; }
-    .error { background: rgba(239,68,68,0.12); color: #fecaca; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    th { color: #94a3b8; font-size: 0.9rem; }
-    tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-    .metric-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-    .metric { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; }
-    .metric strong { display: block; font-size: 1.55rem; margin-bottom: 6px; }
-    .metric span { color: #94a3b8; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
     
-    /* Tabs */
-    .tab-list { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; }
-    .tab-btn { background: transparent; border: 1px solid transparent; color: #94a3b8; font-weight: 600; padding: 10px 20px; border-radius: 12px; cursor: pointer; }
-    .tab-btn:hover { background: rgba(255,255,255,0.05); }
-    .tab-btn.active { background: rgba(255,255,255,0.1); color: #e8edf5; border: 1px solid rgba(255,255,255,0.1); }
+    :root {
+        --bg: #0E1117;
+        --sidebar-bg: #262730;
+        --bg2: #111e35;
+        --bg3: #0d1526;
+        --border: rgba(255,255,255,0.07);
+        --green: #05f0a0;
+        --red: #ff3f5b;
+        --yellow: #ffc542;
+        --blue: #3d9eff;
+        --muted: #4a5e7a;
+        --text: #e8edf5;
+    }
+
+    * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); display: flex; }
+    h1, h2, h3 { font-family: 'Syne', sans-serif; }
+    a { color: var(--green); text-decoration: none; }
+
+    /* Layout */
+    .sidebar { width: 320px; background: var(--sidebar-bg); padding: 24px; border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; display: flex; flex-direction: column; overflow-y: auto; }
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { display: flex; justify-content: space-between; padding: 16px 40px; background: rgba(14, 17, 23, 0.95); border-bottom: 1px solid var(--border); }
+    .main-content { padding: 32px 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+    /* Sidebar specifics */
+    .sidebar-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: #e8edf5; letter-spacing: -0.5px; }
+    .sidebar-subtitle { font-size: 0.73rem; color: #a5b4fc; margin-top: 2px; margin-bottom: 24px; }
+    
+    .sidebar-nav { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+    .sidebar-link { padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; color: var(--text); font-weight: 500; border: 1px solid transparent; transition: 0.2s; }
+    .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-link.active { background: #111e35; border: 1px solid rgba(5,240,160,0.3); color: var(--green); }
+
+    .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+    
+    /* Model Info */
+    .info-card { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .info-row { margin-bottom: 12px; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-key { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 2px; }
+    .info-val { font-size: 0.9rem; color: var(--text); font-weight: 500; }
+    .info-val.green { color: var(--green); font-family: 'DM Mono', monospace; font-size: 1.1rem; }
+
+    /* Footer */
+    .floating-footer { position: fixed; bottom: 20px; right: 20px; font-size: 13px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 8px; backdrop-filter: blur(5px); z-index: 100; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* General UI */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
+    .hero { background: linear-gradient(135deg, #0d1526 0%, #0a1220 60%, #0d1e30 100%); border: 1px solid var(--border); border-radius: 20px; padding: 32px 40px; margin-bottom: 28px; position: relative; overflow: hidden; }
+    .hero-title { font-family: 'Syne', sans-serif; font-size: 2.1rem; font-weight: 800; margin: 0 0 6px; letter-spacing: -1px; }
+    .hero-title span { color: var(--green); }
+    .pill { display: inline-flex; align-items: center; gap: 7px; background: rgba(5,240,160,0.08); border: 1px solid rgba(5,240,160,0.25); color: var(--green); padding: 5px 14px; border-radius: 30px; font-size: 0.71rem; font-weight: 600; font-family: 'DM Mono', monospace; }
+    .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    input, textarea, select { width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #0a1220; color: var(--text); padding: 12px 16px; font: inherit; }
+    input:focus, textarea:focus { border-color: rgba(5,240,160,0.4); outline: none; box-shadow: 0 0 0 3px rgba(5,240,160,0.06); }
+    button { background: linear-gradient(135deg, #05f0a0, #00c07a); color: #050f1a; font-weight: 700; border: none; border-radius: 10px; padding: 12px 28px; cursor: pointer; transition: opacity .2s, transform .2s; }
+    button:hover { opacity: .88; transform: translateY(-1px); }
+
+    .btn-secondary { background: #111e35; color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #1a2a47; color: #fff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th { text-align: left; padding: 12px; color: #94a3b8; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
+    tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+    .res-wrap { text-align: center; padding: 28px 20px; border-radius: 14px; margin-top: 18px; border: 1px solid var(--border); animation: fadeup .4s ease; }
+    @keyframes fadeup { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    
     .tab-content { display: none; }
     .tab-content.active { display: block; }
   </style>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 </head>
 <body>
-  <div class="site-shell">
+  {% block sidebar %}{% endblock %}
+
+  <div class="main-wrapper">
     <header class="topbar">
-      <a class="brand" href="/">SentimentIQ SaaS</a>
-      <nav class="nav-links">
+      <div style="font-weight: 700; font-family:'Syne'; font-size:1.2rem;">SentimentIQ SaaS</div>
+      <div style="display:flex; gap:16px;">
         {% if user %}
           <a href="/dashboard">Dashboard</a>
           <a href="/logout">Logout</a>
@@ -67,16 +100,45 @@
           <a href="/login">Login</a>
           <a href="/register">Register</a>
         {% endif %}
-      </nav>
+      </div>
     </header>
 
-    <main class="content">
+    <main class="main-content">
       {% block content %}{% endblock %}
     </main>
-
-    <footer class="footer">
-      SentimentIQ SaaS · Multi-tenant analytics with model API & tenant-level usage.
-    </footer>
   </div>
+
+  <div class="floating-footer">
+    👨‍💻 Built by <b>Vaibhav Bhoyate</b> | 🚀 Streamlit Inspired
+  </div>
+  
+  <script>
+    function switchMode(mode) {
+      document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById('nav-' + mode).classList.add('active');
+      document.getElementById('tab-' + mode).classList.add('active');
+    }
+    
+    function downloadCSV(tableId, filename) {
+        let csv = [];
+        let rows = document.querySelectorAll("#" + tableId + " tr");
+        for (let i = 0; i < rows.length; i++) {
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length; j++) 
+                row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+            csv.push(row.join(","));
+        }
+        let csvFile = new Blob([csv.join("\\n")], {type: "text/csv"});
+        let downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+  </script>
 </body>
 </html>
