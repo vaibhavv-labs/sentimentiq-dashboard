@@ -220,14 +220,12 @@ def predict(text: str):
         predictions.sort(key=lambda x: x.get("score", 0), reverse=True)
         top_pred = predictions[0]
         
-        label_str = top_pred.get("label", "")
+        label_str = str(top_pred.get("label", "")).upper()
         conf = top_pred.get("score", 0) * 100
         
-        # cardiffnlp/twitter-roberta-base-sentiment mapping:
-        # LABEL_0 -> Negative, LABEL_1 -> Neutral, LABEL_2 -> Positive
-        if conf < 65 or label_str == "LABEL_1":
+        if label_str in ["LABEL_1", "NEUTRAL"]:
             return "Neutral", conf, "😐"
-        elif label_str == "LABEL_2":
+        elif label_str in ["LABEL_2", "POSITIVE"]:
             return "Positive", conf, "😊"
         else:
             return "Negative", conf, "😡"
