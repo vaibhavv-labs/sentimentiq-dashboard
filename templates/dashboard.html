@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · SentimentIQ SaaS{% endblock %}
+{% block content %}
+  <div class="panel">
+    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px;">
+      <div>
+        <h1 class="page-title">Welcome back, {{ user.name }}.</h1>
+        <p class="subtitle">Tenant: <strong>{{ tenant.name }}</strong> · Total predictions: <strong>{{ metrics.total }}</strong></p>
+      </div>
+      <div class="badge">Multi-tenant SaaS</div>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric"><strong>{{ metrics.total }}</strong><span>Total predictions</span></div>
+    <div class="metric"><strong>{{ metrics.positive }}</strong><span>Positive predictions</span></div>
+    <div class="metric"><strong>{{ metrics.neutral }}</strong><span>Neutral predictions</span></div>
+    <div class="metric"><strong>{{ metrics.negative }}</strong><span>Negative predictions</span></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-head"><h2>Analyze text</h2></div>
+      <form method="post">
+        <div class="field">
+          <label for="text">Enter text to predict sentiment</label>
+          <textarea id="text" name="text" placeholder="I love this product!" required></textarea>
+        </div>
+        <button type="submit">Run sentiment analysis</button>
+      </form>
+      {% if analysis %}
+        {% if analysis.error %}
+          <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
+        {% else %}
+          <div class="notice" style="margin-top:18px;">
+            {{ analysis.emoji }} <strong>{{ analysis.sentiment }}</strong> · Confidence {{ analysis.confidence }}
+            <div>{{ analysis.message }}</div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>API access</h2></div>
+      <p>Use the REST API with a bearer token after signing in.</p>
+      <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@company.com","password":"yourpassword"}'</pre>
+      <p>Then call:</p>
+      <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/predict \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"I had a great day"}'</pre>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Recent tenant predictions</h2>
+    {% if recent %}
+      <table>
+        <thead>
+          <tr><th>When</th><th>Text</th><th>Sentiment</th><th>Confidence</th><th>User</th></tr>
+        </thead>
+        <tbody>
+          {% for item in recent %}
+            <tr>
+              <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ item.text }}</td>
+              <td>{{ item.sentiment }}</td>
+              <td>{{ item.confidence }}%</td>
+              <td>{{ item.user.email }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="color:#94a3b8;">No predictions yet. Enter a sentence above to save your first record.</p>
+    {% endif %}
+  </div>
+{% endblock %}

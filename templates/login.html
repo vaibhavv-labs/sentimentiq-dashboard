@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Login · SentimentIQ SaaS{% endblock %}
+{% block content %}
+  <div class="panel" style="max-width: 520px; margin: auto;">
+    <h1 class="page-title">Team sign in</h1>
+    <p class="subtitle">Access your tenant dashboard and prediction API with a secure login.</p>
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+    {% if message %}
+      <div class="notice">{{ message }}</div>
+    {% endif %}
+    <form method="post">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@company.com" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter your password" required />
+      </div>
+      <div class="field">
+        <label for="tenant">Tenant name</label>
+        <input id="tenant" name="tenant" type="text" placeholder="Your organization" required />
+      </div>
+      <button type="submit">Sign in</button>
+    </form>
+    <p style="margin-top:18px; color:#94a3b8;">New team? <a href="/register">Create a tenant and user</a>.</p>
+  </div>
+{% endblock %}
