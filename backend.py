@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Optional
 
-import torch
-import torch.nn.functional as F
+import os
+import requests
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -17,7 +17,6 @@ from sqlalchemy import (Column, DateTime, Float, ForeignKey, Integer, String,
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 from starlette.middleware.sessions import SessionMiddleware
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from pydantic import BaseModel
 
 SECRET_KEY = "change-this-secret-for-production"
@@ -35,10 +34,7 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie="sen
 
 @app.on_event("startup")
 def startup_event():
-    # Pre-load model into memory during server startup so the first request is instant
-    print("Pre-loading RoBERTa model into memory...")
-    load_model()
-    print("Model loaded successfully!")
+    print("Starting FastAPI Backend (Using HuggingFace Cloud API)")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -149,30 +145,48 @@ def is_valid_text(text: str):
     return True, "", ""
 
 
-@lru_cache()
-def load_model():
-    model = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
-    tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment")
-    return model, tokenizer
-
+HF_TOKEN = os.environ.get("HF_TOKEN")
 
 def predict(text: str):
-    model, tokenizer = load_model()
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=128)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    probs = F.softmax(outputs.logits, dim=1)
-    pred = torch.argmax(probs).item()
-    conf = probs[0][pred].item() * 100
+    # Use HuggingFace Inference API instead of local PyTorch model to save RAM
+    API_URL = "https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment"
+    headers = {}
+    if HF_TOKEN:
+        headers["Authorization"] = f"Bearer {HF_TOKEN}"
     
-    # cardiffnlp/twitter-roberta-base-sentiment mapping:
-    # 0 -> Negative, 1 -> Neutral, 2 -> Positive
-    if conf < 90 or pred == 1:
-        return "Neutral", conf, "😐"
-    elif pred == 2:
-        return "Positive", conf, "😊"
-    else:
-        return "Negative", conf, "😡"
+    try:
+        response = requests.post(API_URL, headers=headers, json={"inputs": text}, timeout=10)
+        # Handle cases where model is waking up on Hugging Face
+        if response.status_code == 503:
+            time.sleep(3)
+            response = requests.post(API_URL, headers=headers, json={"inputs": text}, timeout=10)
+            
+        response.raise_for_status()
+        data = response.json()
+        
+        # Format: [[{"label":"LABEL_2","score":0.95}, ...]]
+        if not data or not isinstance(data, list) or not data[0]:
+            raise ValueError("Invalid response from API")
+            
+        predictions = data[0]
+        predictions.sort(key=lambda x: x.get("score", 0), reverse=True)
+        top_pred = predictions[0]
+        
+        label_str = top_pred.get("label", "")
+        conf = top_pred.get("score", 0) * 100
+        
+        # cardiffnlp/twitter-roberta-base-sentiment mapping:
+        # LABEL_0 -> Negative, LABEL_1 -> Neutral, LABEL_2 -> Positive
+        if conf < 90 or label_str == "LABEL_1":
+            return "Neutral", conf, "😐"
+        elif label_str == "LABEL_2":
+            return "Positive", conf, "😊"
+        else:
+            return "Negative", conf, "😡"
+            
+    except Exception as e:
+        print(f"HF API Error: {e}")
+        return "Neutral", 0.0, "😐"
 
 
 def get_dashboard_context(user: User, db: Session):
