@@ -4,3 +4,11 @@ transformers
 pandas
 plotly
 google-api-python-client
+fastapi
+uvicorn
+sqlalchemy
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+jinja2
+bcrypt<4.0.0
