@@ -5,10 +5,14 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Optional
 
+import io
 import os
 import requests
-from fastapi import Depends, FastAPI, Form, HTTPException, Request, status
+import pandas as pd
+import plotly.graph_objects as go
+from fastapi import Depends, FastAPI, Form, HTTPException, Request, status, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from googleapiclient.discovery import build
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -143,6 +147,50 @@ def is_valid_text(text: str):
     if re.findall(r"[^aeiouAEIOU\s]{6,}", t):
         return False, "Gibberish detected!", "Please enter a meaningful English sentence."
     return True, "", ""
+
+PBASE = dict(
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(color='#4a5e7a', family='DM Sans'),
+    margin=dict(l=0, r=0, t=10, b=0)
+)
+
+def sentiment_charts(pos, neu, neg, tot):
+    fig = go.Figure(go.Pie(
+        labels=["Positive","Neutral","Negative"], values=[pos, neu, neg], hole=0.60,
+        marker=dict(colors=["#05f0a0","#ffc542","#ff3f5b"], line=dict(color="#070b14", width=3)),
+        textinfo="percent", textfont=dict(size=12, color="white"),
+        hovertemplate="<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>"
+    ))
+    fig.update_layout(**PBASE, height=240, showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.22, font=dict(color="#e8edf5", size=11), bgcolor="rgba(0,0,0,0)"),
+        annotations=[dict(text=f"<b>{tot}</b><br>texts", x=0.5, y=0.5, showarrow=False, font=dict(size=13, color="#e8edf5"))]
+    )
+    pie_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    
+    fig2 = go.Figure(go.Bar(
+        x=["Positive","Neutral","Negative"], y=[pos, neu, neg],
+        marker=dict(color=["#05f0a0","#ffc542","#ff3f5b"], line=dict(color="rgba(0,0,0,0)", width=0)),
+        text=[pos, neu, neg], textposition="outside", textfont=dict(color="#e8edf5", size=13),
+        hovertemplate="<b>%{x}</b><br>Count: %{y}<extra></extra>"
+    ))
+    fig2.update_layout(**PBASE, height=240, bargap=0.38,
+        xaxis=dict(showgrid=False, color="#4a5e7a", tickfont=dict(size=12)),
+        yaxis=dict(gridcolor="rgba(255,255,255,0.05)", color="#4a5e7a", showline=False))
+    bar_html = fig2.to_html(full_html=False, include_plotlyjs=False)
+    return pie_html, bar_html
+
+TEXT_COLUMN_ALIASES = ["text", "tweet", "tweet_text", "content", "body", "post", "message", "comment"]
+
+def normalize_text_column(df):
+    lower_to_original = {str(column).lower().strip(): column for column in df.columns}
+    for column in TEXT_COLUMN_ALIASES:
+        original = lower_to_original.get(column)
+        if original is None:
+            continue
+        if original == "text":
+            return df
+        return df.rename(columns={original: "text"})
+    return None
 
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
@@ -308,6 +356,7 @@ def get_dashboard(request: Request, db: Session = Depends(get_db)):
             "metrics": context["metrics"],
             "recent": context["recent"],
             "analysis": None,
+            "active_tab": "text"
         },
     )
 
@@ -351,8 +400,125 @@ def post_dashboard(request: Request, text: str = Form(...), db: Session = Depend
             "metrics": context["metrics"],
             "recent": context["recent"],
             "analysis": analysis,
+            "active_tab": "text"
         },
     )
+
+@app.post("/dashboard/csv", response_class=HTMLResponse)
+async def post_dashboard_csv(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    user = get_session_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login")
+        
+    analysis = None
+    try:
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+        df = normalize_text_column(df)
+        if df is None:
+            analysis = {"error": "Invalid CSV format", "hint": "CSV must include a text column named 'text', 'tweet', 'content', etc."}
+        else:
+            results, records = [], []
+            for txt in df["text"].astype(str):
+                valid, _, _ = is_valid_text(txt)
+                if valid:
+                    sentiment, conf, emoji = predict(txt)
+                    records.append(Prediction(tenant_id=user.tenant_id, user_id=user.id, text=txt[:500], sentiment=sentiment, confidence=round(conf, 1)))
+                else:
+                    sentiment, conf, emoji = "Invalid", 0.0, "⚠️"
+                results.append({"text": txt, "sentiment": sentiment, "confidence": round(conf,1), "emoji": emoji})
+                
+            if records:
+                db.bulk_save_objects(records)
+                db.commit()
+            
+            valid_results = [r for r in results if r["sentiment"] != "Invalid"]
+            pos = sum(1 for r in valid_results if r["sentiment"] == "Positive")
+            neu = sum(1 for r in valid_results if r["sentiment"] == "Neutral")
+            neg = sum(1 for r in valid_results if r["sentiment"] == "Negative")
+            tot = len(valid_results)
+            
+            pie_chart, bar_chart = sentiment_charts(pos, neu, neg, tot)
+            
+            analysis = {
+                "type": "csv", "total": tot, "positive": pos, "neutral": neu, "negative": neg,
+                "pie_chart": pie_chart, "bar_chart": bar_chart, "data": valid_results[:20]
+            }
+    except Exception as e:
+        analysis = {"error": "Error processing CSV", "hint": str(e)}
+
+    context = get_dashboard_context(user, db)
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={
+        "request": request, "user": user, "tenant": context["tenant"], "metrics": context["metrics"], 
+        "recent": context["recent"], "analysis": analysis, "active_tab": "csv"
+    })
+
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+
+@app.post("/dashboard/youtube", response_class=HTMLResponse)
+def post_dashboard_youtube(request: Request, yt_url: str = Form(...), comment_limit: int = Form(50), db: Session = Depends(get_db)):
+    user = get_session_user(request, db)
+    if not user:
+        return RedirectResponse(url="/login")
+        
+    analysis = None
+    if not YOUTUBE_API_KEY:
+        analysis = {"error": "YouTube API Key missing", "hint": "Configure YOUTUBE_API_KEY in environment."}
+    else:
+        match = re.search(r"(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})", yt_url)
+        if not match:
+            analysis = {"error": "Invalid YouTube URL", "hint": "Please paste a valid YouTube video link."}
+        else:
+            try:
+                video_id = match.group(1)
+                youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+                response = youtube.commentThreads().list(part="snippet", videoId=video_id, maxResults=comment_limit, textFormat="plainText").execute()
+                
+                comments = []
+                for item in response.get("items", []):
+                    snippet = item["snippet"]["topLevelComment"]["snippet"]
+                    comments.append({"text": snippet["textDisplay"], "likes": snippet["likeCount"]})
+                
+                if not comments:
+                    analysis = {"error": "No comments found", "hint": "This video might have comments disabled."}
+                else:
+                    results, records = [], []
+                    for c in comments:
+                        txt = c["text"]
+                        valid, _, _ = is_valid_text(txt)
+                        if valid:
+                            sentiment, conf, emoji = predict(txt)
+                            records.append(Prediction(tenant_id=user.tenant_id, user_id=user.id, text=txt[:500], sentiment=sentiment, confidence=round(conf, 1)))
+                        else:
+                            sentiment, conf, emoji = "Neutral", 60.0, "😐"
+                        results.append({"text": txt, "sentiment": sentiment, "confidence": round(conf, 1), "emoji": emoji, "likes": c["likes"]})
+                    
+                    if records:
+                        db.bulk_save_objects(records)
+                        db.commit()
+                        
+                    results.sort(key=lambda x: x.get("likes", 0), reverse=True)
+                    
+                    pos = sum(1 for r in results if r["sentiment"] == "Positive")
+                    neu = sum(1 for r in results if r["sentiment"] == "Neutral")
+                    neg = sum(1 for r in results if r["sentiment"] == "Negative")
+                    tot = len(results)
+                    
+                    pie_chart, bar_chart = sentiment_charts(pos, neu, neg, tot)
+                    
+                    analysis = {
+                        "type": "youtube", "total": tot, "positive": pos, "neutral": neu, "negative": neg,
+                        "pie_chart": pie_chart, "bar_chart": bar_chart, "data": results[:20]
+                    }
+                    
+            except Exception as e:
+                analysis = {"error": "YouTube API Error", "hint": str(e)}
+
+    context = get_dashboard_context(user, db)
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={
+        "request": request, "user": user, "tenant": context["tenant"], "metrics": context["metrics"], 
+        "recent": context["recent"], "analysis": analysis, "active_tab": "youtube"
+    })
 
 
 @app.get("/logout")

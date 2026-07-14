@@ -18,41 +18,156 @@
     <div class="metric"><strong>{{ metrics.negative }}</strong><span>Negative predictions</span></div>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <div class="card-head"><h2>Analyze text</h2></div>
-      <form method="post">
-        <div class="field">
-          <label for="text">Enter text to predict sentiment</label>
-          <textarea id="text" name="text" placeholder="I love this product!" required></textarea>
-        </div>
-        <button type="submit">Run sentiment analysis</button>
-      </form>
-      {% if analysis %}
-        {% if analysis.error %}
-          <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
-        {% else %}
-          <div class="notice" style="margin-top:18px;">
-            {{ analysis.emoji }} <strong>{{ analysis.sentiment }}</strong> · Confidence {{ analysis.confidence }}
-            <div>{{ analysis.message }}</div>
-          </div>
-        {% endif %}
-      {% endif %}
-    </div>
+  <div class="tab-list">
+    <button class="tab-btn {% if active_tab == 'text' or not active_tab %}active{% endif %}" onclick="openTab(event, 'tab-text')">Single Text</button>
+    <button class="tab-btn {% if active_tab == 'csv' %}active{% endif %}" onclick="openTab(event, 'tab-csv')">Bulk CSV</button>
+    <button class="tab-btn {% if active_tab == 'youtube' %}active{% endif %}" onclick="openTab(event, 'tab-youtube')">YouTube Live</button>
+  </div>
 
-    <div class="card">
-      <div class="card-head"><h2>API access</h2></div>
-      <p>Use the REST API with a bearer token after signing in.</p>
-      <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/login \
+  <div id="tab-text" class="tab-content {% if active_tab == 'text' or not active_tab %}active{% endif %}">
+    <div class="grid">
+      <div class="card">
+        <div class="card-head"><h2>Analyze text</h2></div>
+        <form method="post" action="/dashboard">
+          <div class="field">
+            <label for="text">Enter text to predict sentiment</label>
+            <textarea id="text" name="text" placeholder="I love this product!" required></textarea>
+          </div>
+          <button type="submit">Run sentiment analysis</button>
+        </form>
+        {% if analysis and active_tab == 'text' %}
+          {% if analysis.error %}
+            <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
+          {% else %}
+            <div class="notice" style="margin-top:18px;">
+              {{ analysis.emoji }} <strong>{{ analysis.sentiment }}</strong> · Confidence {{ analysis.confidence }}
+              <div>{{ analysis.message }}</div>
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>API access</h2></div>
+        <p>Use the REST API with a bearer token after signing in.</p>
+        <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/login \
   -H "Content-Type: application/json" \
   -d '{"email":"you@company.com","password":"yourpassword"}'</pre>
-      <p>Then call:</p>
-      <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/predict \
+        <p>Then call:</p>
+        <pre style="background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; overflow-x:auto;">curl -X POST http://localhost:8000/api/predict \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
   -d '{"text":"I had a great day"}'</pre>
+      </div>
     </div>
   </div>
+
+  <div id="tab-csv" class="tab-content {% if active_tab == 'csv' %}active{% endif %}">
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-head"><h2>Bulk CSV Analysis</h2></div>
+      <form method="post" action="/dashboard/csv" enctype="multipart/form-data" style="display:flex; align-items:center; gap: 16px; flex-wrap: wrap;">
+        <input type="file" name="file" accept=".csv" required style="max-width: 400px; padding: 10px;" />
+        <button type="submit" style="padding: 12px 24px;">Upload & Analyze</button>
+      </form>
+      {% if analysis and active_tab == 'csv' %}
+        {% if analysis.error %}
+           <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
+        {% else %}
+           <div class="grid" style="margin-top: 24px;">
+             <div class="card">
+               <div class="card-head"><h3>Sentiment Split</h3></div>
+               {{ analysis.pie_chart | safe }}
+             </div>
+             <div class="card">
+               <div class="card-head"><h3>Count by Sentiment</h3></div>
+               {{ analysis.bar_chart | safe }}
+             </div>
+           </div>
+           
+           <h3 style="margin-top: 32px;">Top Results</h3>
+           <div style="overflow-x:auto;">
+           <table>
+             <thead><tr><th>Emoji</th><th>Text</th><th>Sentiment</th><th>Confidence</th></tr></thead>
+             <tbody>
+               {% for row in analysis.data %}
+                 <tr>
+                   <td style="font-size:1.5rem">{{ row.emoji }}</td>
+                   <td>{{ row.text[:100] }}{% if row.text|length > 100 %}...{% endif %}</td>
+                   <td>{{ row.sentiment }}</td>
+                   <td>{{ row.confidence }}%</td>
+                 </tr>
+               {% endfor %}
+             </tbody>
+           </table>
+           </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="tab-youtube" class="tab-content {% if active_tab == 'youtube' %}active{% endif %}">
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-head"><h2>YouTube Live Comments</h2></div>
+      <form method="post" action="/dashboard/youtube" style="display:flex; align-items:center; gap: 16px; flex-wrap: wrap;">
+        <input type="text" name="yt_url" placeholder="https://www.youtube.com/watch?v=..." required style="flex:1; min-width: 300px;" />
+        <select name="comment_limit" style="padding: 14px 16px; border-radius: 14px; background: #07101f; color: #e8edf5; border: 1px solid rgba(255,255,255,0.1);">
+           <option value="20">20 Comments</option>
+           <option value="50" selected>50 Comments</option>
+           <option value="100">100 Comments</option>
+        </select>
+        <button type="submit" style="padding: 12px 24px;">Fetch & Analyze</button>
+      </form>
+      {% if analysis and active_tab == 'youtube' %}
+        {% if analysis.error %}
+           <div class="error" style="margin-top:18px;">{{ analysis.error }}<br /><small>{{ analysis.hint }}</small></div>
+        {% else %}
+           <div class="grid" style="margin-top: 24px;">
+             <div class="card">
+               <div class="card-head"><h3>Sentiment Split</h3></div>
+               {{ analysis.pie_chart | safe }}
+             </div>
+             <div class="card">
+               <div class="card-head"><h3>Count by Sentiment</h3></div>
+               {{ analysis.bar_chart | safe }}
+             </div>
+           </div>
+           
+           <h3 style="margin-top: 32px;">Top Comments (By Likes)</h3>
+           <div style="overflow-x:auto;">
+           <table>
+             <thead><tr><th>Emoji</th><th>Comment</th><th>Sentiment</th><th>Confidence</th><th>Likes</th></tr></thead>
+             <tbody>
+               {% for row in analysis.data %}
+                 <tr>
+                   <td style="font-size:1.5rem">{{ row.emoji }}</td>
+                   <td>{{ row.text[:100] }}{% if row.text|length > 100 %}...{% endif %}</td>
+                   <td>{{ row.sentiment }}</td>
+                   <td>{{ row.confidence }}%</td>
+                   <td>👍 {{ row.likes }}</td>
+                 </tr>
+               {% endfor %}
+             </tbody>
+           </table>
+           </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    function openTab(evt, tabName) {
+      const tabContents = document.getElementsByClassName("tab-content");
+      for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+      }
+      const tabBtns = document.getElementsByClassName("tab-btn");
+      for (let i = 0; i < tabBtns.length; i++) {
+        tabBtns[i].classList.remove("active");
+      }
+      document.getElementById(tabName).classList.add("active");
+      evt.currentTarget.classList.add("active");
+    }
+  </script>
 
   <div class="panel">
     <h2>Recent tenant predictions</h2>
