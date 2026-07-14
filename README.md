@@ -161,6 +161,18 @@ YOUTUBE_API_KEY = "your_api_key_here"
 streamlit run app.py
 ```
 
+## 📂 Xquik CSV Uploads
+
+The **Bulk CSV Analysis** mode now accepts social export columns commonly used
+by Xquik and other API exports. Upload a CSV with one of these text columns:
+
+`text`, `tweet`, `tweet_text`, `content`, `body`, `post`, `message`, or
+`comment`.
+
+SentimentIQ normalizes the selected column to `text` before analysis, so the
+downloaded results keep the same sentiment and confidence workflow as the
+existing bulk analyzer.
+
 ---
 
 ## 🗺️ Roadmap
