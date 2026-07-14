@@ -225,7 +225,7 @@ def predict(text: str):
         
         # cardiffnlp/twitter-roberta-base-sentiment mapping:
         # LABEL_0 -> Negative, LABEL_1 -> Neutral, LABEL_2 -> Positive
-        if conf < 90 or label_str == "LABEL_1":
+        if conf < 65 or label_str == "LABEL_1":
             return "Neutral", conf, "😐"
         elif label_str == "LABEL_2":
             return "Positive", conf, "😊"
@@ -465,9 +465,10 @@ def post_dashboard_youtube(request: Request, yt_url: str = Form(...), comment_li
     if not YOUTUBE_API_KEY:
         analysis = {"error": "YouTube API Key missing", "hint": "Configure YOUTUBE_API_KEY in environment."}
     else:
-        match = re.search(r"(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})", yt_url)
+        # Match v=ID, youtu.be/ID, shorts/ID, or live/ID
+        match = re.search(r"(?:v=|youtu\.be/|shorts/|live/)([a-zA-Z0-9_-]{11})", yt_url)
         if not match:
-            analysis = {"error": "Invalid YouTube URL", "hint": "Please paste a valid YouTube video link."}
+            analysis = {"error": "Invalid YouTube URL", "hint": "Please paste a valid YouTube video, shorts, or live stream link."}
         else:
             try:
                 video_id = match.group(1)
